@@ -7,6 +7,43 @@ cd "$(dirname "$0")/.."
 
 BIN_DIR="$HOME/.local/bin"
 
+# Verify Tauri's Linux build dependencies (webkit2gtk is the linchpin).
+# Detects the package manager and offers to install what's missing.
+check_linux_deps() {
+  if command -v pkg-config >/dev/null 2>&1 \
+     && { pkg-config --exists webkit2gtk-4.1 || pkg-config --exists webkit2gtk-4.0; }; then
+    return 0
+  fi
+
+  echo "==> Missing Linux build dependencies (webkit2gtk not found)"
+  local cmd=""
+  if command -v apt-get >/dev/null 2>&1; then
+    cmd="sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev build-essential curl wget file pkg-config libxdo-dev libssl-dev libayatana-appindicator3-dev librsvg2-dev"
+  elif command -v dnf >/dev/null 2>&1; then
+    cmd="sudo dnf install -y webkit2gtk4.1-devel openssl-devel curl wget file libappindicator-gtk3-devel librsvg2-devel && sudo dnf group install -y c-development"
+  elif command -v pacman >/dev/null 2>&1; then
+    cmd="sudo pacman -S --needed --noconfirm webkit2gtk-4.1 base-devel curl wget file openssl appmenu-gtk-module libappindicator-gtk3 librsvg"
+  elif command -v zypper >/dev/null 2>&1; then
+    cmd="sudo zypper install -y webkit2gtk3-soup2-devel libopenssl-devel curl wget file libappindicator3-1 librsvg-devel && sudo zypper install -y -t pattern devel_basis"
+  else
+    echo "    Could not detect your package manager. Install Tauri's Linux" >&2
+    echo "    prerequisites manually: https://v2.tauri.app/start/prerequisites/" >&2
+    exit 1
+  fi
+
+  echo "    Install with:"
+  echo "      $cmd"
+  if [ -t 0 ]; then
+    read -r -p "    Run this now? [y/N] " reply
+    case "$reply" in
+      [yY]*) eval "$cmd" ;;
+      *) echo "    Aborted. Install the deps and re-run." >&2; exit 1 ;;
+    esac
+  else
+    exit 1
+  fi
+}
+
 install_macos() {
   local app="src-tauri/target/release/bundle/macos/marker.app"
   local dest="/Applications/marker.app"
@@ -50,16 +87,22 @@ EOF
   update-desktop-database "$apps_dir" 2>/dev/null || true
 }
 
+OS="$(uname -s)"
+case "$OS" in
+  Darwin) ;;
+  Linux)  check_linux_deps ;;
+  *) echo "Unsupported OS: $OS. Only macOS and Linux are supported." >&2; exit 1 ;;
+esac
+
 echo "==> Installing JS dependencies"
 pnpm install
 
 echo "==> Building app bundle (this takes a few minutes on first run)"
 pnpm tauri build
 
-case "$(uname -s)" in
+case "$OS" in
   Darwin) install_macos ;;
   Linux)  install_linux ;;
-  *) echo "Unsupported OS: $(uname -s). Only macOS and Linux are supported." >&2; exit 1 ;;
 esac
 
 case ":$PATH:" in
