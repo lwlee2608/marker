@@ -15,6 +15,7 @@ uninstall_macos() {
 
 uninstall_linux() {
   rm -f "$BIN_DIR/marker"
+  rm -rf "$HOME/.local/lib/marker"
   local apps_dir="$HOME/.local/share/applications"
   rm -f "$apps_dir/marker.desktop"
   update-desktop-database "$apps_dir" 2>/dev/null || true
