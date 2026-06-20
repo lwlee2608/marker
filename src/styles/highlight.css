@@ -1,0 +1,12 @@
+/*
+ * Syntax-highlight token colors are generated server-side by syntect and
+ * injected at runtime as a <style id="syntect-theme"> (see main.ts +
+ * markdown::highlight_css). Class prefix: "hl-".
+ *
+ * This file only sets the default code foreground; the injected rules
+ * (scoped to :root / [data-theme="dark"]) color individual tokens.
+ */
+
+.markdown-body pre code {
+  color: var(--code-fg);
+}
