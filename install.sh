@@ -29,7 +29,7 @@ download() {  # url file
 detect() {
   case "$(uname -s)" in
     Darwin) PLATFORM=macos; EXT='\.dmg$' ;;
-    Linux)  PLATFORM=linux; EXT='marker-linux' ;;  # raw binary, not the flaky AppImage
+    Linux)  PLATFORM=linux; EXT='\.AppImage$' ;;  # self-contained: bundles webkit2gtk
     *) err "unsupported OS: $(uname -s) (only macOS and Linux are supported)" ;;
   esac
   case "$(uname -m)" in
@@ -85,53 +85,42 @@ install_macos() {  # asset-url
   rm -rf "$tmp"
 }
 
-check_linux_runtime_deps() {
-  # Capture ldconfig output rather than `| grep -q`: grep's early exit SIGPIPEs
-  # ldconfig and trips pipefail. ldconfig may also be off a non-root PATH.
-  local ldconfig libs
-  ldconfig="$(command -v ldconfig || echo /sbin/ldconfig)"
-  libs="$("$ldconfig" -p 2>/dev/null || true)"
-  case "$libs" in
-    *libwebkit2gtk-4.1.so*) return 0 ;;
-  esac
-
-  echo "==> Missing runtime dependency: webkit2gtk"
-  local cmd=""
-  if have apt-get; then
-    cmd="sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-0 libgtk-3-0 libayatana-appindicator3-1 librsvg2-2"
-  elif have dnf; then
-    cmd="sudo dnf install -y webkit2gtk4.1 libappindicator-gtk3 librsvg2"
-  elif have pacman; then
-    cmd="sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libappindicator-gtk3 librsvg"
-  elif have zypper; then
-    cmd="sudo zypper install -y libwebkit2gtk-4_1-0 libappindicator3-1 librsvg-2-2"
-  else
-    err "could not detect your package manager; install webkit2gtk manually: https://v2.tauri.app/start/prerequisites/"
-  fi
-
-  echo "    Install with:"
-  echo "      $cmd"
-  if [ -t 0 ]; then
-    read -r -p "    Run this now? [y/N] " reply
-    case "$reply" in
-      [yY]*) eval "$cmd" ;;
-      *) err "aborted; install the dep above and re-run" ;;
-    esac
-  else
-    err "non-interactive shell; install the dep above and re-run"
-  fi
-}
-
 install_linux() {  # asset-url
-  check_linux_runtime_deps
-
-  local tmp_bin="$BIN_DIR/marker.tmp.$$"
+  # The AppImage bundles webkit2gtk, so there is no system dependency to install.
+  local app_dir="$HOME/.local/lib/marker"
+  local tmp
+  tmp="$(mktemp -d)"
 
   echo "==> Downloading $1"
+  download "$1" "$tmp/marker.AppImage"
+  chmod +x "$tmp/marker.AppImage"
+
+  # Extract instead of mounting: avoids needing libfuse2 (absent on Ubuntu 22.04+)
+  # and lets our launcher own the environment. --appimage-extract has no deps.
+  echo "==> Extracting"
+  ( cd "$tmp" && ./marker.AppImage --appimage-extract >/dev/null ) \
+    || err "failed to extract AppImage"
+  rm -rf "$app_dir"
+  mkdir -p "$(dirname "$app_dir")"
+  mv "$tmp/squashfs-root" "$app_dir"
+  rm -rf "$tmp"
+
+  # Launcher shim. Two fixes baked in: resolve relative path args to absolute
+  # (the AppDir is not the user's CWD, so a bare "README.md" would not be found),
+  # and disable WebKitGTK's DMABUF renderer, which blanks the window on some
+  # NVIDIA/Wayland setups.
   mkdir -p "$BIN_DIR"
-  download "$1" "$tmp_bin"
-  rm -f "$BIN_DIR/marker"  # avoid ETXTBSY if marker is currently running
-  mv "$tmp_bin" "$BIN_DIR/marker"
+  rm -f "$BIN_DIR/marker"
+  cat > "$BIN_DIR/marker" <<'EOF'
+#!/usr/bin/env bash
+APPDIR="$HOME/.local/lib/marker"
+args=()
+for a in "$@"; do
+  if [ -e "$a" ]; then args+=("$(realpath -- "$a")"); else args+=("$a"); fi
+done
+export WEBKIT_DISABLE_DMABUF_RENDERER="${WEBKIT_DISABLE_DMABUF_RENDERER:-1}"
+exec "$APPDIR/AppRun" "${args[@]}"
+EOF
   chmod +x "$BIN_DIR/marker"
 
   local apps_dir="$HOME/.local/share/applications"

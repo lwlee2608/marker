@@ -24,9 +24,10 @@ pub fn run() {
 
     #[cfg(desktop)]
     {
-        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
             if let Some(path) = first_md_arg(&argv) {
-                if let Ok(payload) = commands::load_path(app, PathBuf::from(path)) {
+                let abs = resolve_arg(&path, std::path::Path::new(&cwd));
+                if let Ok(payload) = commands::load_path(app, abs) {
                     let _ = app.emit("file-opened", payload);
                 }
             }
@@ -63,6 +64,19 @@ pub fn run() {
         });
 }
 
+// CLI args may be relative paths. Resolve them against the caller's working
+// directory up front — when launched from an AppImage the process CWD is the
+// mountpoint, not the user's shell dir, so a bare "README.md" would not be found.
+#[cfg(desktop)]
+fn resolve_arg(path: &str, base: &std::path::Path) -> PathBuf {
+    let p = PathBuf::from(path);
+    if p.is_absolute() {
+        p
+    } else {
+        base.join(p)
+    }
+}
+
 #[cfg(desktop)]
 fn first_md_arg(argv: &[String]) -> Option<String> {
     argv.iter()
@@ -83,8 +97,10 @@ fn capture_cli_arg(app: &tauri::App) {
     if let Some(arg) = matches.args.get("source") {
         if let Some(s) = arg.value.as_str() {
             if !s.is_empty() {
+                let base = std::env::current_dir().unwrap_or_default();
+                let abs = resolve_arg(s, &base);
                 let state: State<AppState> = app.state();
-                *state.initial_file.lock().unwrap() = Some(s.to_string());
+                *state.initial_file.lock().unwrap() = Some(abs.to_string_lossy().into_owned());
             }
         }
     }

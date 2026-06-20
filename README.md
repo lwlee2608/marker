@@ -17,7 +17,8 @@ curl -fsSL https://raw.githubusercontent.com/lwlee2608/marker/main/install.sh | 
 ```
 
 - **macOS** → `marker.app` in `/Applications`
-- **Linux** → an AppImage in `~/.local/bin`
+- **Linux** → a self-contained AppImage — bundles WebKitGTK, so there are no system
+  dependencies to install
 
 Pin a specific version with `MARKER_VERSION=v0.1.0 ...`. If `~/.local/bin` isn't on
 your `PATH`, the installer tells you to add it.
