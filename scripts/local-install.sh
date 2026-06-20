@@ -40,6 +40,19 @@ check_linux_deps() {
       *) echo "    Aborted. Install the deps and re-run." >&2; exit 1 ;;
     esac
   else
+    echo "    Non-interactive shell; install the deps above and re-run." >&2
+    exit 1
+  fi
+}
+
+# pnpm and the Rust toolchain are required to build, on every OS.
+check_toolchain() {
+  local missing=""
+  command -v pnpm  >/dev/null 2>&1 || missing="$missing pnpm (https://pnpm.io)"
+  command -v cargo >/dev/null 2>&1 || missing="$missing rust/cargo (https://rustup.rs)"
+  if [ -n "$missing" ]; then
+    echo "==> Missing build tools:$missing" >&2
+    echo "    Install the above and re-run." >&2
     exit 1
   fi
 }
@@ -68,6 +81,7 @@ install_linux() {
 
   echo "==> Installing 'marker' command to $BIN_DIR"
   mkdir -p "$BIN_DIR"
+  rm -f "$BIN_DIR/marker"  # avoid ETXTBSY if marker is currently running
   cp "$bin" "$BIN_DIR/marker"
   chmod +x "$BIN_DIR/marker"
 
@@ -85,6 +99,7 @@ Categories=Utility;TextEditor;
 MimeType=text/markdown;
 EOF
   update-desktop-database "$apps_dir" 2>/dev/null || true
+  xdg-mime default marker.desktop text/markdown 2>/dev/null || true
 }
 
 OS="$(uname -s)"
@@ -94,15 +109,17 @@ case "$OS" in
   *) echo "Unsupported OS: $OS. Only macOS and Linux are supported." >&2; exit 1 ;;
 esac
 
+check_toolchain
+
 echo "==> Installing JS dependencies"
 pnpm install
 
-echo "==> Building app bundle (this takes a few minutes on first run)"
-pnpm tauri build
-
+# Build only what each installer consumes: macOS needs the .app bundle,
+# Linux uses the raw binary (skip deb/rpm/AppImage — slow and AppImage is flaky).
+echo "==> Building app (this takes a few minutes on first run)"
 case "$OS" in
-  Darwin) install_macos ;;
-  Linux)  install_linux ;;
+  Darwin) pnpm tauri build --bundles app; install_macos ;;
+  Linux)  pnpm tauri build --no-bundle;   install_linux ;;
 esac
 
 case ":$PATH:" in
