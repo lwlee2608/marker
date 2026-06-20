@@ -91,7 +91,11 @@ install_macos() {  # asset-url
 # Ensure the runtime libs are present (mirrors local-install.sh's
 # check_linux_deps, but runtime packages rather than -dev).
 check_linux_runtime_deps() {
-  if ldconfig -p 2>/dev/null | grep -q 'libwebkit2gtk-4\.1\.so'; then
+  # ldconfig lives in /usr/sbin, which is often absent from a non-root PATH
+  # (e.g. under `curl … | bash`), so resolve it explicitly.
+  local ldconfig
+  ldconfig="$(command -v ldconfig || echo /sbin/ldconfig)"
+  if "$ldconfig" -p 2>/dev/null | grep -q 'libwebkit2gtk-4\.1\.so'; then
     return 0
   fi
 
