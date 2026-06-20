@@ -86,9 +86,13 @@ install_macos() {  # asset-url
 }
 
 install_linux() {  # asset-url
+  local tmp_bin="$BIN_DIR/marker.tmp.$$"
+
   echo "==> Downloading $1"
   mkdir -p "$BIN_DIR"
-  download "$1" "$BIN_DIR/marker"
+  download "$1" "$tmp_bin"
+  rm -f "$BIN_DIR/marker"  # avoid ETXTBSY if marker is currently running
+  mv "$tmp_bin" "$BIN_DIR/marker"
   chmod +x "$BIN_DIR/marker"
 
   local apps_dir="$HOME/.local/share/applications"
@@ -104,6 +108,7 @@ Categories=Utility;TextEditor;
 MimeType=text/markdown;
 EOF
   update-desktop-database "$apps_dir" 2>/dev/null || true
+  xdg-mime default marker.desktop text/markdown 2>/dev/null || true
 }
 
 main() {
