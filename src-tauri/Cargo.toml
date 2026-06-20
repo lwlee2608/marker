@@ -1,0 +1,34 @@
+[package]
+name = "marker"
+version = "0.1.0"
+description = "A minimal Markdown viewer"
+authors = ["Jason Lee <jason@eternis.ai>"]
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "marker_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+tauri-plugin-fs = "2"
+tauri-plugin-cli = "2"
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+comrak = "0.28"
+syntect = "5"
+notify-debouncer-full = "0.3"
+
+[target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
+tauri-plugin-single-instance = "2"
+
+[profile.release]
+opt-level = "s"
+lto = true
+strip = true

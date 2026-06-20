@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>marker</title>
+    <link rel="stylesheet" href="/src/styles/app.css" />
+    <link rel="stylesheet" href="/src/styles/markdown.css" />
+    <link rel="stylesheet" href="/src/styles/highlight.css" />
+  </head>
+  <body>
+    <div id="app">
+      <header class="toolbar">
+        <button id="open-btn" class="btn" title="Open Markdown file (⌘O)">Open</button>
+        <span id="file-name" class="file-name"></span>
+        <button
+          id="theme-btn"
+          class="btn icon-btn"
+          title="Toggle light/dark theme"
+          aria-label="Toggle theme"
+        ></button>
+      </header>
+      <div class="body">
+        <nav id="toc" class="toc" aria-label="Table of contents"></nav>
+        <main id="content" class="content">
+          <div id="empty" class="empty">
+            <h1>marker</h1>
+            <p>A minimal Markdown viewer.</p>
+            <p class="hint">
+              Drag &amp; drop a <code>.md</code> file here, or click
+              <strong>Open</strong>.
+            </p>
+          </div>
+          <article id="doc" class="markdown-body"></article>
+        </main>
+      </div>
+    </div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
