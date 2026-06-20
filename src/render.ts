@@ -125,7 +125,12 @@ function wireLinks(doc: HTMLElement): void {
         const rel = href.replace(/[?#].*$/, "");
         loadPath(joinNormalize(dirOf(currentPath), rel));
       });
+      return;
     }
+
+    // Anything else (relative .html/.txt, bare host, protocol-relative //host):
+    // swallow the click so the webview can't navigate away from the app shell.
+    a.addEventListener("click", (ev) => ev.preventDefault());
   });
 }
 
