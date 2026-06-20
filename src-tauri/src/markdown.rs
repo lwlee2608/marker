@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::io::{self, Write};
 use std::path::Path;
+use std::sync::OnceLock;
 
 use comrak::adapters::SyntaxHighlighterAdapter;
 use comrak::nodes::{AstNode, NodeValue};
@@ -142,14 +143,21 @@ fn scope_css(css: &str, scope: &str) -> String {
     out
 }
 
+/// Deserializing syntect's default syntaxes is expensive; load once and reuse
+/// across every render (each file open and live-reload).
+fn syntax_set() -> &'static SyntaxSet {
+    static SYNTAX_SET: OnceLock<SyntaxSet> = OnceLock::new();
+    SYNTAX_SET.get_or_init(SyntaxSet::load_defaults_newlines)
+}
+
 struct ClassHighlighter {
-    syntax_set: SyntaxSet,
+    syntax_set: &'static SyntaxSet,
 }
 
 impl ClassHighlighter {
     fn new() -> Self {
         Self {
-            syntax_set: SyntaxSet::load_defaults_newlines(),
+            syntax_set: syntax_set(),
         }
     }
 
@@ -181,7 +189,7 @@ impl SyntaxHighlighterAdapter for ClassHighlighter {
             .unwrap_or("");
         let syntax = self.find_syntax(token);
         let mut generator =
-            ClassedHTMLGenerator::new_with_class_style(syntax, &self.syntax_set, CLASS_STYLE);
+            ClassedHTMLGenerator::new_with_class_style(syntax, self.syntax_set, CLASS_STYLE);
         for line in LinesWithEndings::from(code) {
             generator
                 .parse_html_for_line_which_includes_newline(line)
