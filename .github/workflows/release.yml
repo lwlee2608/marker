@@ -74,3 +74,14 @@ jobs:
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
+
+      # install.sh downloads this raw binary (not the AppImage) on Linux, for
+      # parity with scripts/local-install.sh.
+      - name: Upload raw Linux binary
+        if: matrix.platform == 'ubuntu-22.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cp src-tauri/target/release/marker marker-linux-x86_64
+          gh release upload "${{ github.ref_name }}" marker-linux-x86_64 \
+            --repo "${{ github.repository }}" --clobber

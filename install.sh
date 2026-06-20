@@ -29,7 +29,9 @@ download() {  # url file
 detect() {
   case "$(uname -s)" in
     Darwin) PLATFORM=macos; EXT='\.dmg$' ;;
-    Linux)  PLATFORM=linux; EXT='\.AppImage$' ;;
+    # Linux ships the raw binary (not the AppImage) for parity with
+    # scripts/local-install.sh — the AppImage's bundled GTK env is flaky.
+    Linux)  PLATFORM=linux; EXT='marker-linux' ;;
     *) err "unsupported OS: $(uname -s) (only macOS and Linux are supported)" ;;
   esac
   case "$(uname -m)" in
@@ -85,7 +87,44 @@ install_macos() {  # asset-url
   rm -rf "$tmp"
 }
 
+# The raw binary is dynamically linked against the system webkit2gtk stack.
+# Ensure the runtime libs are present (mirrors local-install.sh's
+# check_linux_deps, but runtime packages rather than -dev).
+check_linux_runtime_deps() {
+  if ldconfig -p 2>/dev/null | grep -q 'libwebkit2gtk-4\.1\.so'; then
+    return 0
+  fi
+
+  echo "==> Missing runtime dependency: webkit2gtk"
+  local cmd=""
+  if have apt-get; then
+    cmd="sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-0 libgtk-3-0 libayatana-appindicator3-1 librsvg2-2"
+  elif have dnf; then
+    cmd="sudo dnf install -y webkit2gtk4.1 libappindicator-gtk3 librsvg2"
+  elif have pacman; then
+    cmd="sudo pacman -S --needed --noconfirm webkit2gtk-4.1 libappindicator-gtk3 librsvg"
+  elif have zypper; then
+    cmd="sudo zypper install -y libwebkit2gtk-4_1-0 libappindicator3-1 librsvg-2-2"
+  else
+    err "could not detect your package manager; install webkit2gtk manually: https://v2.tauri.app/start/prerequisites/"
+  fi
+
+  echo "    Install with:"
+  echo "      $cmd"
+  if [ -t 0 ]; then
+    read -r -p "    Run this now? [y/N] " reply
+    case "$reply" in
+      [yY]*) eval "$cmd" ;;
+      *) err "aborted; install the dep above and re-run" ;;
+    esac
+  else
+    err "non-interactive shell; install the dep above and re-run"
+  fi
+}
+
 install_linux() {  # asset-url
+  check_linux_runtime_deps
+
   local tmp_bin="$BIN_DIR/marker.tmp.$$"
 
   echo "==> Downloading $1"
