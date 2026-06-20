@@ -103,11 +103,17 @@ function wireLinks(doc: HTMLElement): void {
       return;
     }
 
-    if (/^[a-z][a-z0-9+.-]*:/i.test(href)) {
-      // absolute URL (http, https, mailto, …) → open externally
+    const scheme = href.match(/^([a-z][a-z0-9+.-]*):/i)?.[1]?.toLowerCase();
+    if (scheme) {
+      // absolute URL → only hand known-safe schemes to the OS; block the rest
+      // (file:, javascript:, smb:, …) since docs may be untrusted
       a.addEventListener("click", (ev) => {
         ev.preventDefault();
-        openUrl(href).catch((e) => console.error("openUrl failed", e));
+        if (scheme === "http" || scheme === "https" || scheme === "mailto") {
+          openUrl(href).catch((e) => console.error("openUrl failed", e));
+        } else {
+          console.warn(`blocked link with unsupported scheme: ${scheme}:`);
+        }
       });
       return;
     }
