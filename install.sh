@@ -29,9 +29,7 @@ download() {  # url file
 detect() {
   case "$(uname -s)" in
     Darwin) PLATFORM=macos; EXT='\.dmg$' ;;
-    # Linux ships the raw binary (not the AppImage) for parity with
-    # scripts/local-install.sh — the AppImage's bundled GTK env is flaky.
-    Linux)  PLATFORM=linux; EXT='marker-linux' ;;
+    Linux)  PLATFORM=linux; EXT='marker-linux' ;;  # raw binary, not the flaky AppImage
     *) err "unsupported OS: $(uname -s) (only macOS and Linux are supported)" ;;
   esac
   case "$(uname -m)" in
@@ -87,14 +85,9 @@ install_macos() {  # asset-url
   rm -rf "$tmp"
 }
 
-# The raw binary is dynamically linked against the system webkit2gtk stack.
-# Ensure the runtime libs are present (mirrors local-install.sh's
-# check_linux_deps, but runtime packages rather than -dev).
 check_linux_runtime_deps() {
-  # ldconfig lives in /usr/sbin, which is often absent from a non-root PATH
-  # (e.g. under `curl … | bash`), so resolve it explicitly. Capture its output
-  # instead of piping to `grep -q`: grep's early exit gives ldconfig a SIGPIPE
-  # that, under `set -o pipefail`, would be misread as "lib missing".
+  # Capture ldconfig output rather than `| grep -q`: grep's early exit SIGPIPEs
+  # ldconfig and trips pipefail. ldconfig may also be off a non-root PATH.
   local ldconfig libs
   ldconfig="$(command -v ldconfig || echo /sbin/ldconfig)"
   libs="$("$ldconfig" -p 2>/dev/null || true)"
