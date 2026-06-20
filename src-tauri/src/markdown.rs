@@ -212,7 +212,9 @@ fn write_tag(output: &mut dyn Write, tag: &str, attributes: HashMap<String, Stri
     let mut attrs: Vec<_> = attributes.into_iter().collect();
     attrs.sort();
     for (key, value) in attrs {
-        write!(output, " {key}=\"{value}\"")?;
+        write!(output, " {key}=\"")?;
+        comrak::html::escape(output, value.as_bytes())?; // attrs (e.g. fence lang) are untrusted
+        output.write_all(b"\"")?;
     }
     write!(output, ">")
 }
@@ -267,6 +269,13 @@ mod tests {
     fn fenced_code_is_class_highlighted() {
         let doc = render("```rust\nfn main() {}\n```\n", "x.md");
         assert!(doc.html.contains("hl-"), "html: {}", doc.html);
+    }
+
+    #[test]
+    fn fence_lang_attribute_is_escaped() {
+        let doc = render("```\"><img/src=x/onerror=alert(1)>\ncode\n```\n", "x.md");
+        assert!(!doc.html.contains("<img"), "html: {}", doc.html);
+        assert!(doc.html.contains("language-&quot;&gt;"), "html: {}", doc.html);
     }
 
     #[test]
