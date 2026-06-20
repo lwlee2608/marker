@@ -92,12 +92,15 @@ install_macos() {  # asset-url
 # check_linux_deps, but runtime packages rather than -dev).
 check_linux_runtime_deps() {
   # ldconfig lives in /usr/sbin, which is often absent from a non-root PATH
-  # (e.g. under `curl … | bash`), so resolve it explicitly.
-  local ldconfig
+  # (e.g. under `curl … | bash`), so resolve it explicitly. Capture its output
+  # instead of piping to `grep -q`: grep's early exit gives ldconfig a SIGPIPE
+  # that, under `set -o pipefail`, would be misread as "lib missing".
+  local ldconfig libs
   ldconfig="$(command -v ldconfig || echo /sbin/ldconfig)"
-  if "$ldconfig" -p 2>/dev/null | grep -q 'libwebkit2gtk-4\.1\.so'; then
-    return 0
-  fi
+  libs="$("$ldconfig" -p 2>/dev/null || true)"
+  case "$libs" in
+    *libwebkit2gtk-4.1.so*) return 0 ;;
+  esac
 
   echo "==> Missing runtime dependency: webkit2gtk"
   local cmd=""
