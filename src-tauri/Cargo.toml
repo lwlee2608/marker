@@ -1,6 +1,6 @@
 [package]
 name = "marker"
-version = "0.1.0"
+version = "1.0.0"
 description = "A minimal Markdown viewer"
 authors = ["Jason Lee <jason@eternis.ai>"]
 edition = "2021"
