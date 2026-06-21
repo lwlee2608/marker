@@ -26,7 +26,7 @@ const FONTS: Record<string, { label: string; stack: string }> = {
   },
 };
 
-const DEFAULT_FONT = "jetbrains-mono";
+const DEFAULT_FONT = "system-sans";
 const SIZES = [13, 14, 15, 16, 18, 20];
 const DEFAULT_SIZE = 16;
 
