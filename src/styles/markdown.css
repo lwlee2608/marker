@@ -2,7 +2,8 @@
   display: none;
   max-width: 860px;
   margin: 0 auto;
-  font-size: 16px;
+  font-family: var(--app-font);
+  font-size: var(--app-font-size);
   line-height: 1.6;
   word-wrap: break-word;
 }
@@ -112,8 +113,7 @@
 
 /* Inline code */
 .markdown-body code {
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    monospace;
+  font-family: var(--app-font);
   font-size: 85%;
   padding: 0.2em 0.4em;
   background: var(--code-bg);

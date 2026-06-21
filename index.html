@@ -13,12 +13,36 @@
       <header class="toolbar">
         <button id="open-btn" class="btn" title="Open Markdown file (⌘O)">Open</button>
         <span id="file-name" class="file-name"></span>
-        <button
-          id="theme-btn"
-          class="btn icon-btn"
-          title="Toggle light/dark theme"
-          aria-label="Toggle theme"
-        ></button>
+        <div class="settings">
+          <button
+            id="settings-btn"
+            class="btn icon-btn"
+            title="Settings"
+            aria-label="Settings"
+            aria-haspopup="true"
+            aria-expanded="false"
+          >
+            ⚙
+          </button>
+          <div id="settings-panel" class="settings-panel">
+            <label class="settings-row">
+              <span>Font</span>
+              <select id="font-select"></select>
+            </label>
+            <label class="settings-row">
+              <span>Size</span>
+              <select id="size-select"></select>
+            </label>
+            <label class="settings-row">
+              <span>Theme</span>
+              <select id="theme-select">
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+            </label>
+          </div>
+        </div>
       </header>
       <div class="body">
         <nav id="toc" class="toc" aria-label="Table of contents"></nav>

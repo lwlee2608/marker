@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { renderDoc, loadPath, openDialog, type DocPayload } from "./render";
-import { initTheme, toggleTheme } from "./theme";
+import { initSettings } from "./settings";
 
 async function injectHighlightCss(): Promise<void> {
   try {
@@ -17,14 +17,11 @@ async function injectHighlightCss(): Promise<void> {
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
-  initTheme();
+  initSettings();
   await injectHighlightCss();
 
   document.getElementById("open-btn")?.addEventListener("click", () => {
     openDialog();
-  });
-  document.getElementById("theme-btn")?.addEventListener("click", () => {
-    toggleTheme();
   });
   window.addEventListener("keydown", (e) => {
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "o") {
