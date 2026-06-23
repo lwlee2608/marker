@@ -107,9 +107,11 @@ body {
 }
 
 .icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 32px;
   padding: 5px 0;
-  text-align: center;
   font-size: 15px;
   line-height: 1;
 }
