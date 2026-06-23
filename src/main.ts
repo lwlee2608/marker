@@ -3,6 +3,7 @@ import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
 import { renderDoc, loadPath, openDialog, type DocPayload } from "./render";
 import { initSettings } from "./settings";
+import { initSidebar } from "./sidebar";
 
 async function injectHighlightCss(): Promise<void> {
   try {
@@ -18,6 +19,7 @@ async function injectHighlightCss(): Promise<void> {
 
 window.addEventListener("DOMContentLoaded", async () => {
   initSettings();
+  initSidebar();
   await injectHighlightCss();
 
   document.getElementById("open-btn")?.addEventListener("click", () => {
