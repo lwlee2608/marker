@@ -3,7 +3,9 @@ mod markdown;
 mod watcher;
 
 use std::path::PathBuf;
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::atomic::AtomicBool;
+#[cfg(target_os = "macos")]
+use std::sync::atomic::Ordering;
 use std::sync::Mutex;
 
 #[cfg(desktop)]
