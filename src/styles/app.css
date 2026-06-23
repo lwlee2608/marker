@@ -178,10 +178,27 @@ body {
   border-right: 1px solid var(--border);
   background: var(--sidebar-bg);
   font-size: 13px;
+  transition:
+    width 0.2s ease,
+    padding 0.2s ease;
 }
 
 .toc.is-empty {
   display: none;
+}
+
+body.sidebar-collapsed .toc {
+  width: 0;
+  padding-left: 0;
+  padding-right: 0;
+  border-right-width: 0;
+  overflow: hidden;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .toc {
+    transition: none;
+  }
 }
 
 .toc ul {
