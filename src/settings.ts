@@ -4,6 +4,7 @@ type ThemeChoice = Theme | "system";
 const THEME_KEY = "marker-theme";
 const FONT_KEY = "marker-font";
 const SIZE_KEY = "marker-font-size";
+const CODE_SPACING_KEY = "marker-code-spacing";
 
 const FONTS: Record<string, { label: string; stack: string }> = {
   "jetbrains-mono": {
@@ -29,10 +30,16 @@ const FONTS: Record<string, { label: string; stack: string }> = {
 const DEFAULT_FONT = "system-sans";
 const SIZES = [13, 14, 15, 16, 18, 20];
 const DEFAULT_SIZE = 16;
+const CODE_SPACINGS: Record<string, { label: string; lineHeight: number }> = {
+  tight: { label: "Tight", lineHeight: 1.2 },
+  normal: { label: "Normal", lineHeight: 1.45 },
+};
+const DEFAULT_CODE_SPACING = "tight";
 
 export function initSettings(): void {
   const fontSel = byId<HTMLSelectElement>("font-select");
   const sizeSel = byId<HTMLSelectElement>("size-select");
+  const spacingSel = byId<HTMLSelectElement>("code-spacing-select");
   const themeSel = byId<HTMLSelectElement>("theme-select");
   const btn = byId<HTMLButtonElement>("settings-btn");
   const panel = byId<HTMLDivElement>("settings-panel");
@@ -57,6 +64,18 @@ export function initSettings(): void {
   sizeSel.addEventListener("change", () => {
     applySize(Number(sizeSel.value));
     localStorage.setItem(SIZE_KEY, sizeSel.value);
+  });
+
+  // Code spacing
+  for (const [key, { label }] of Object.entries(CODE_SPACINGS)) {
+    spacingSel.add(new Option(label, key));
+  }
+  const spacing = localStorage.getItem(CODE_SPACING_KEY) ?? DEFAULT_CODE_SPACING;
+  spacingSel.value = CODE_SPACINGS[spacing] ? spacing : DEFAULT_CODE_SPACING;
+  applyCodeSpacing(spacingSel.value);
+  spacingSel.addEventListener("change", () => {
+    applyCodeSpacing(spacingSel.value);
+    localStorage.setItem(CODE_SPACING_KEY, spacingSel.value);
   });
 
   // Theme
@@ -103,6 +122,13 @@ function applyFont(key: string): void {
 
 function applySize(px: number): void {
   document.documentElement.style.setProperty("--app-font-size", `${px}px`);
+}
+
+function applyCodeSpacing(key: string): void {
+  document.documentElement.style.setProperty(
+    "--code-line-height",
+    String(CODE_SPACINGS[key].lineHeight),
+  );
 }
 
 function applyTheme(theme: Theme): void {
