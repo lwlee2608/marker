@@ -107,6 +107,11 @@ body {
   transform: translateY(0.5px);
 }
 
+.btn:disabled {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
 .icon-btn {
   display: inline-flex;
   align-items: center;

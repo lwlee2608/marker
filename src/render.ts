@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import * as history from "./history";
 
 export interface TocEntry {
   level: number;
@@ -18,33 +19,47 @@ let spy: IntersectionObserver | null = null;
 
 export async function loadPath(path: string): Promise<void> {
   try {
-    const payload = await invoke<DocPayload>("load_file", { path });
-    renderDoc(payload);
+    openDoc(await invoke<DocPayload>("load_file", { path }));
   } catch (e) {
-    showError(String(e));
+    history.visit(path, scrollTop());
+    showError(path, String(e));
   }
 }
 
 export async function openDialog(): Promise<void> {
   try {
     const payload = await invoke<DocPayload | null>("open_file_dialog");
-    if (payload) renderDoc(payload);
+    if (payload) openDoc(payload);
   } catch (e) {
-    showError(String(e));
+    showError(currentPath, String(e));
   }
 }
 
-export function renderDoc(
-  payload: DocPayload,
-  opts: { preserveScroll?: boolean } = {},
-): void {
+export function openDoc(payload: DocPayload): void {
+  history.visit(payload.path, scrollTop());
+  renderDoc(payload, 0);
+}
+
+export function reloadDoc(payload: DocPayload): void {
+  if (payload.path === currentPath) renderDoc(payload, scrollTop());
+}
+
+export async function go(delta: number): Promise<void> {
+  const entry = history.step(delta, scrollTop());
+  if (!entry) return;
+  try {
+    const payload = await invoke<DocPayload>("load_file", { path: entry.path });
+    renderDoc(payload, entry.scroll);
+  } catch (e) {
+    showError(entry.path, String(e));
+  }
+}
+
+function renderDoc(payload: DocPayload, scroll: number): void {
   const content = el("content");
   const doc = el("doc");
   const empty = el("empty");
   const fileName = el("file-name");
-
-  const samePath = payload.path === currentPath;
-  const prevScroll = opts.preserveScroll && samePath ? content.scrollTop : 0;
 
   currentPath = payload.path;
   doc.innerHTML = payload.html;
@@ -59,8 +74,12 @@ export function renderDoc(
   buildToc(payload.toc);
   wireLinks(doc);
   setupScrollSpy(content, payload.toc);
+  syncNavButtons();
 
-  content.scrollTop = prevScroll;
+  // bypass the CSS smooth scroll so restoring jumps instead of animating
+  content.style.scrollBehavior = "auto";
+  content.scrollTop = scroll;
+  content.style.scrollBehavior = "";
 }
 
 function buildToc(toc: TocEntry[]): void {
@@ -176,7 +195,8 @@ function scrollToId(id: string): void {
   target?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
-function showError(message: string): void {
+function showError(path: string, message: string): void {
+  currentPath = path;
   const doc = el("doc");
   const empty = el("empty");
   empty.style.display = "none";
@@ -187,14 +207,24 @@ function showError(message: string): void {
   div.textContent = message;
   doc.appendChild(div);
   el("toc").innerHTML = "";
+  syncNavButtons();
+}
+
+function syncNavButtons(): void {
+  el<HTMLButtonElement>("back-btn").disabled = !history.canGoBack();
+  el<HTMLButtonElement>("forward-btn").disabled = !history.canGoForward();
+}
+
+function scrollTop(): number {
+  return el("content").scrollTop;
 }
 
 // --- helpers ---
 
-function el(id: string): HTMLElement {
+function el<T extends HTMLElement = HTMLElement>(id: string): T {
   const node = document.getElementById(id);
   if (!node) throw new Error(`missing element #${id}`);
-  return node;
+  return node as T;
 }
 
 function baseName(p: string): string {
