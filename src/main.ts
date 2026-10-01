@@ -1,7 +1,14 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebview } from "@tauri-apps/api/webview";
-import { renderDoc, loadPath, openDialog, type DocPayload } from "./render";
+import {
+  openDoc,
+  reloadDoc,
+  loadPath,
+  openDialog,
+  go,
+  type DocPayload,
+} from "./render";
 import { initFind } from "./find";
 import { initSettings } from "./settings";
 import { initSidebar } from "./sidebar";
@@ -27,18 +34,34 @@ window.addEventListener("DOMContentLoaded", async () => {
   document.getElementById("open-btn")?.addEventListener("click", () => {
     openDialog();
   });
+  document.getElementById("back-btn")?.addEventListener("click", () => go(-1));
+  document
+    .getElementById("forward-btn")
+    ?.addEventListener("click", () => go(1));
   window.addEventListener("keydown", (e) => {
-    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "o") {
+    const mod = e.metaKey || e.ctrlKey;
+    if (mod && e.key.toLowerCase() === "o") {
       e.preventDefault();
       openDialog();
+    } else if ((mod && e.key === "[") || (e.altKey && e.key === "ArrowLeft")) {
+      e.preventDefault();
+      go(-1);
+    } else if ((mod && e.key === "]") || (e.altKey && e.key === "ArrowRight")) {
+      e.preventDefault();
+      go(1);
     }
+  });
+  window.addEventListener("mouseup", (e) => {
+    if (e.button !== 3 && e.button !== 4) return;
+    e.preventDefault();
+    go(e.button === 3 ? -1 : 1);
   });
 
   await listen<DocPayload>("file-changed", (e) => {
-    renderDoc(e.payload, { preserveScroll: true });
+    reloadDoc(e.payload);
   });
   await listen<DocPayload>("file-opened", (e) => {
-    renderDoc(e.payload);
+    openDoc(e.payload);
   });
 
   getCurrentWebview().onDragDropEvent((event) => {
