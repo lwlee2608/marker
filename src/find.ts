@@ -144,10 +144,15 @@ function highlight(root: HTMLElement, query: string): HTMLElement[][] {
   return result.reverse();
 }
 
-const BLOCK_PARENTS = /^(ARTICLE|BLOCKQUOTE|TABLE|THEAD|TBODY|TFOOT|TR|UL|OL)$/;
+const BLOCK =
+  /^(P|H[1-6]|UL|OL|LI|PRE|BLOCKQUOTE|TABLE|THEAD|TBODY|TR|TH|TD|HR|SECTION)$/;
 
 function isBlockGap(node: Text): boolean {
-  return !node.data.trim() && BLOCK_PARENTS.test(node.parentElement?.tagName ?? "");
+  return !node.data.trim() && [node.previousSibling, node.nextSibling].some(isBlock);
+}
+
+function isBlock(node: Node | null): boolean {
+  return node instanceof Element && BLOCK.test(node.tagName);
 }
 
 function wrap(node: Text, from: number, to: number): HTMLElement {
