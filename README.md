@@ -40,6 +40,7 @@ cd marker
 ```sh
 marker README.md      # open a file
 marker                # launch with the file picker
+marker --version      # print the version
 ```
 
 You can also open files via drag & drop, the in-app picker, or your OS

@@ -1,3 +1,5 @@
+import { getVersion } from "@tauri-apps/api/app";
+
 type Theme = "light" | "dark";
 type ThemeChoice = Theme | "system";
 
@@ -43,6 +45,8 @@ export function initSettings(): void {
   const themeSel = byId<HTMLSelectElement>("theme-select");
   const btn = byId<HTMLButtonElement>("settings-btn");
   const panel = byId<HTMLDivElement>("settings-panel");
+
+  getVersion().then((v) => (byId("app-version").textContent = `marker v${v}`));
 
   // Font
   for (const [key, { label }] of Object.entries(FONTS)) {

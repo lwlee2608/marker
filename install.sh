@@ -63,6 +63,9 @@ install_shim_macos() {
   cat > "$BIN_DIR/marker" <<'EOF'
 #!/usr/bin/env bash
 # marker — open Markdown files in the marker.app desktop viewer
+case "$1" in
+  --version|-V) exec "/Applications/marker.app/Contents/MacOS/marker" "$1" ;;
+esac
 exec open -a "/Applications/marker.app" "$@"
 EOF
   chmod +x "$BIN_DIR/marker"
