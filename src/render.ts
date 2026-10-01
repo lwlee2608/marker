@@ -16,6 +16,7 @@ export interface DocPayload {
 
 let currentPath = "";
 let spy: IntersectionObserver | null = null;
+let navigating = false;
 
 export async function loadPath(path: string): Promise<void> {
   try {
@@ -45,13 +46,17 @@ export function reloadDoc(payload: DocPayload): void {
 }
 
 export async function go(delta: number): Promise<void> {
+  if (navigating) return;
   const entry = history.step(delta, scrollTop());
   if (!entry) return;
+  navigating = true;
   try {
     const payload = await invoke<DocPayload>("load_file", { path: entry.path });
     renderDoc(payload, entry.scroll);
   } catch (e) {
     showError(entry.path, String(e));
+  } finally {
+    navigating = false;
   }
 }
 
