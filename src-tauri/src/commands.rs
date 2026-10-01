@@ -19,7 +19,7 @@ pub fn get_highlight_css() -> String {
     markdown::highlight_css()
 }
 
-#[tauri::command]
+#[tauri::command(async)]
 pub fn open_file_dialog(app: AppHandle) -> Result<Option<DocPayload>, String> {
     let file = app
         .dialog()
