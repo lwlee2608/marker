@@ -114,7 +114,11 @@ function highlight(root: HTMLElement, query: string): HTMLElement[][] {
     ends.push(text.length);
   }
 
-  const re = new RegExp(query.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "gi");
+  const pattern = query
+    .split(/\s+/)
+    .map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .join("\\s+");
+  const re = new RegExp(pattern, "gi");
   const matches = [...text.matchAll(re)];
 
   // Wrap from the end: splitText keeps the prefix in the original node, so
