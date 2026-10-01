@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { refreshFind } from "./find";
 
 export interface TocEntry {
   level: number;
@@ -59,6 +60,7 @@ export function renderDoc(
   buildToc(payload.toc);
   wireLinks(doc);
   setupScrollSpy(content, payload.toc);
+  refreshFind();
 
   content.scrollTop = prevScroll;
 }

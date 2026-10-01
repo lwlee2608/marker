@@ -196,3 +196,14 @@
 .markdown-body del {
   color: var(--muted);
 }
+
+/* Find matches */
+.markdown-body mark.find-match {
+  color: inherit;
+  background: var(--find-match);
+  border-radius: 2px;
+}
+
+.markdown-body mark.find-match.current {
+  background: var(--find-current);
+}
