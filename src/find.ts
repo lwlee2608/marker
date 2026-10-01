@@ -108,6 +108,10 @@ function highlight(root: HTMLElement, query: string): HTMLElement[][] {
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
   while (walker.nextNode()) {
     const node = walker.currentNode as Text;
+    if (isBlockGap(node)) {
+      text += "\0";
+      continue;
+    }
     nodes.push(node);
     starts.push(text.length);
     text += node.data;
@@ -138,6 +142,12 @@ function highlight(root: HTMLElement, query: string): HTMLElement[][] {
     result.push(group);
   }
   return result.reverse();
+}
+
+const BLOCK_PARENTS = /^(ARTICLE|BLOCKQUOTE|TABLE|THEAD|TBODY|TFOOT|TR|UL|OL)$/;
+
+function isBlockGap(node: Text): boolean {
+  return !node.data.trim() && BLOCK_PARENTS.test(node.parentElement?.tagName ?? "");
 }
 
 function wrap(node: Text, from: number, to: number): HTMLElement {
