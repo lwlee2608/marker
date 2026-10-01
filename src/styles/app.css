@@ -13,6 +13,8 @@
   --active-bg: #ddf4ff;
   --selection: #b6e3ff80;
   --shadow: rgba(31, 35, 40, 0.04);
+  --find-match: #fff3a3;
+  --find-current: #ffb35c;
 
   --app-font: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans",
     Helvetica, Arial, sans-serif;
@@ -35,6 +37,8 @@
   --active-bg: #388bfd26;
   --selection: #2f6feb66;
   --shadow: rgba(0, 0, 0, 0.3);
+  --find-match: #bb80094d;
+  --find-current: #9e6a03;
 }
 
 * {
@@ -173,6 +177,7 @@ body {
 
 /* Body: sidebar + content */
 .body {
+  position: relative;
   display: flex;
   flex: 1 1 auto;
   min-height: 0;
@@ -262,6 +267,50 @@ body.sidebar-collapsed .toc {
 }
 .toc-h6 > a {
   padding-left: 70px;
+}
+
+/* Find bar */
+.find-bar {
+  position: absolute;
+  top: 10px;
+  right: 24px;
+  z-index: 10;
+  display: none;
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+}
+
+.find-bar.open {
+  display: flex;
+}
+
+.find-bar input {
+  width: 200px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  outline: none;
+}
+
+.find-bar input:focus {
+  border-color: var(--accent);
+}
+
+.find-count {
+  min-width: 52px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /* Content */

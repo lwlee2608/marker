@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { openUrl } from "@tauri-apps/plugin-opener";
+import { refreshFind } from "./find";
 import * as history from "./history";
 
 export interface TocEntry {
@@ -80,6 +81,7 @@ function renderDoc(payload: DocPayload, scroll: number): void {
   wireLinks(doc);
   setupScrollSpy(content, payload.toc);
   syncNavButtons();
+  refreshFind();
 
   // bypass the CSS smooth scroll so restoring jumps instead of animating
   content.style.scrollBehavior = "auto";

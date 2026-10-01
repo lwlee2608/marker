@@ -265,6 +265,10 @@ Single window, three regions:
   `#anchor` → smooth-scroll to the element; absolute URL (`http(s)`, `mailto`, …) →
   open in the OS browser via the opener plugin; relative `*.md`/`*.markdown` → resolve
   against the current file's directory and `load_file` it **in-app**.
+- **Find** (`find.ts`): ⌘F / Ctrl+F opens a find bar; case-insensitive search over the
+  rendered text, matches wrapped in `<mark>` (works on every WebKit version, unlike the
+  CSS Custom Highlight API). Enter / ⌘G cycle matches; Esc closes and unwraps. Re-runs
+  after every `renderDoc` (live reload, new file).
 - **Drag & drop**: `getCurrentWebview().onDragDropEvent()`; on drop, take the first
   `.md`/`.markdown` path and `load_file`.
 - **Theme** (`theme.ts`): CSS variables under `:root` / `[data-theme]`; toggle a
@@ -333,7 +337,7 @@ tauri-plugin-single-instance = "2"
   images render. (Minor privacy trade-off: a remote fetch reveals the doc was opened.)
 - **Relative links to other `.md` files:** *open in-app* — resolved against the current
   file's directory and loaded in the same window; external links open in the OS browser.
-- **Future:** search-in-document, print/export, recent-files list, multiple windows,
+- **Future:** cross-file search, print/export, recent-files list, multiple windows,
   swap placeholder icons, replace `tagfilter`/escaping with `ammonia` if raw HTML is
   ever wanted, exercise `tauri build` in CI.
 ```
