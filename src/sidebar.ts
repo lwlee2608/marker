@@ -31,7 +31,7 @@ function apply(btn: HTMLButtonElement, collapsed: boolean): void {
   btn.title = collapsed ? "Show sidebar ([)" : "Hide sidebar ([)";
 }
 
-function isFormField(target: EventTarget | null): boolean {
+export function isFormField(target: EventTarget | null): boolean {
   const tag = (target as HTMLElement | null)?.tagName;
   return tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT";
 }

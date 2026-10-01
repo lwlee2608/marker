@@ -11,7 +11,7 @@ import {
 } from "./render";
 import { initFind } from "./find";
 import { initSettings } from "./settings";
-import { initSidebar } from "./sidebar";
+import { initSidebar, isFormField } from "./sidebar";
 
 async function injectHighlightCss(): Promise<void> {
   try {
@@ -43,6 +43,8 @@ window.addEventListener("DOMContentLoaded", async () => {
     if (mod && e.key.toLowerCase() === "o") {
       e.preventDefault();
       openDialog();
+    } else if (e.altKey && isFormField(e.target)) {
+      return;
     } else if ((mod && e.key === "[") || (e.altKey && e.key === "ArrowLeft")) {
       e.preventDefault();
       go(-1);
